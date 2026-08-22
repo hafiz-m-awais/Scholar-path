@@ -140,7 +140,14 @@ export default function EmailsPage() {
       )}
 
       {selectedEmail && (
-        <EmailDetailModal email={selectedEmail} onClose={() => setSelectedEmail(null)} />
+        <EmailDetailModal 
+          email={selectedEmail} 
+          onClose={() => setSelectedEmail(null)} 
+          onDeleted={() => {
+            setSelectedEmail(null);
+            mutate();
+          }}
+        />
       )}
     </div>
   );

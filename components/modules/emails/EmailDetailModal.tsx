@@ -1,15 +1,35 @@
 "use client";
 import type { SentEmail } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils/dates";
-import { ArrowDownLeft, ArrowUpRight, X } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, X, Trash2, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface EmailDetailModalProps {
   email: SentEmail;
   onClose: () => void;
+  onDeleted?: () => void;
 }
 
-export function EmailDetailModal({ email, onClose }: EmailDetailModalProps) {
+export function EmailDetailModal({ email, onClose, onDeleted }: EmailDetailModalProps) {
   const isReceived = email.direction === "received";
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this email log?")) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/v1/email/${email.id}`, { method: "DELETE" });
+      if (res.ok) {
+        onDeleted?.();
+      } else {
+        alert("Failed to delete email log.");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
@@ -26,9 +46,19 @@ export function EmailDetailModal({ email, onClose }: EmailDetailModalProps) {
               {isReceived ? "Received Email" : "Sent Email"}
             </h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title="Delete email log"
+              className="p-1.5 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            </button>
+            <button onClick={onClose} className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 overflow-y-auto space-y-3">
